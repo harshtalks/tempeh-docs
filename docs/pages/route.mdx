@@ -1,0 +1,201 @@
+## Tempeh to Create Route Builders
+
+Here we will learn how we can use <strong>Tempeh</strong> to create typesafe routes for our Next.js application.
+
+We are in a Next.js application repository with version >= 13 (Tempeh only works for next.js experimental app router as of now). We have the following file structure:
+
+### File Structure
+
+```
+├── root
+|  |
+|  ├── app
+|  |  ├── layout.tsx
+|  |  ├── page.tsx
+|  |  └── components
+|  |     ├── header.tsx
+|  |
+|  |
+|  ├── package.json
+|  ├── next.config.mjs
+
+```
+
+You can see, we are in a typical Next.js application with a layout file and a page file. The content of the page.tsx file are as follows:
+
+### Page.tsx file
+
+```tsx [app/page.tsx]
+export const Page = () => {
+  return (
+    <div>
+      <h1>Page</h1>
+    </div>
+  );
+};
+```
+
+and the content of the layout.tsx file are as follows:
+
+### layout.tsx file
+
+```tsx [app/layout.tsx]
+import { Header } from "./components/header";
+
+export const Layout = ({ children }) => {
+  return (
+    <div>
+      <Header />
+      {children}
+    </div>
+  );
+};
+```
+
+Suppose in the header file, we have a logo component that we want to link to the home page. We can create a route builder for the home page and use it in the header component.
+
+### Header
+
+```tsx [app/components/header.tsx]
+import { Logo } from "./logo";
+import { Link } from "next/link";
+
+export const Header = () => {
+  return (
+    <header>
+      <Link href="/">
+        <Logo />
+      </Link>
+    </header>
+  );
+};
+```
+
+### Issues with the above approach
+
+But there are fundamental flaws with this approach.
+
+1. We are using a string to represent the route. This is not typesafe.
+2. We are using the `Link` component from `next/link` which does not provide typesafety for the route.
+3. We are not aware of the query params that the route might have.
+4. We are also not aware whethere the route is a dynamic route or not.
+
+To solve this, we need to have additional information about the route. We can use <strong>Tempeh</strong> to create a route builder for the home page using the declartive route approach.
+
+## Declartive Route Approach
+
+It is a paradigm taken from the `react-router` library where we can define our routes in a declarative way. We can define our routes in a single file and use them in our application.
+
+The declarative router approach is a way of defining and rendering routes in a web application using a declarative style, where the routes are defined as components or elements in the application's code. This approach is used in libraries and frameworks like React Router, Vue Router, and Angular Router. It is a missing piece in the Next.js routing system but <strong>Tempeh</strong> is for the last minute save here.
+
+In a declarative router, you define your routes as components or elements that represent the different pages or views of your application. Each route component is associated with a specific URL path, and when the URL matches the path, the corresponding component is rendered.
+
+### Creating a Route Builder for index page
+
+Now we will create a file called `route.info.ts` inside the `app` folder and define our route builder for the home page. We will use zod for the schema and type validation as zod is a powerful library for schema validation and this is what <strong>Tempeh</strong> uses under the hood.
+
+### route.info.ts
+
+```tsx twoslash [app/route.info.ts] filename="route.info.ts"
+import * as z from "zod";
+import { createRoute } from "tempeh";
+
+const HomePageRoute = createRoute({
+  name: "home-page",
+  fn: () => "/",
+  paramsSchema: z.object({}),
+  options: {
+    internal: true,
+  },
+});
+
+export default HomePageRoute;
+```
+
+Now let's break down the above code:
+
+1. We are importing zod and createRoute from tempeh.
+2. We are defining `HomePageRoute` as a route builder for the home page.
+3. The route builder function `createRoute` by default takes an object with the following properties:
+
+   - `name`: The name of the route (used internally to map unique routes)
+   - `fn`: A function that returns the path of the route. (it will have access to all the params and search params of the route if any,)
+   - `paramsSchema`: A zod schema for the route params.
+   - `options`: Additional options for the route.
+   - additionally it takes a `searchParamsSchema` for the search params of the route (optional)
+
+You can hover over the `createRoute` function to see the types of the arguments it takes.
+
+### Using the Route Builder in the Header Component
+
+Now we can use the `HomePageRoute` in the header component to link to the home page.
+
+### Header
+
+```tsx [app/components/header.tsx]
+import { Logo } from "./logo";
+import HomePageRoute from "../route.info";
+
+export const Header = () => {
+  return (
+    <header>
+      <HomePageRoute.Link params={{}}>
+        <Logo />
+      </HomePageRoute.Link>
+    </header>
+  );
+};
+```
+
+Now we are using the `HomePageRoute` to link to the home page. The `HomePageRoute` has a `Link` property that we can use to link to the home page. The `Link` property is a component that takes the `params` as an argument. The `params` argument is an object that should match the schema of the route params. In this case, the `HomePageRoute` does not have any params so we are passing an empty object.
+
+You may now able to see the power of <strong>Tempeh</strong> in action. We have created a route builder for the home page and used it in the header component. We have also made the route typesafe by using zod schema for the route params.
+
+We can similarly for every route, create a route builder and use it in our application. This way we can have a single source of truth for our routes and make our application typesafe. This is little bit of work upfront but it will save you a lot of time and effort in the long run.
+
+## Using in the functions instead of a link tag
+
+You can also use the route builder in the functions to get the path of the route. This is useful when you want to use the path in the functions instead of the link tag.
+
+Suppose you want to redirect a user from the signin page to the home page if the user is already signed in.
+
+### File Structure
+
+```
+├── root
+|  |
+|  ├── app
+|  |  ├── layout.tsx
+|  |  ├── page.tsx
+|  |  ├── signin
+|  |  |  ├── page.tsx
+|  |  |  └── route.info.ts
+|  |  └── route.info.ts    // home page route info
+|  |
+|  |
+|  ├── package.json
+```
+
+### signin/page.tsx
+
+```tsx [app/signin/page.tsx]
+import { HomePageRoute } from "../route.info";
+
+export const SigninPage = () => {
+  // check if user is signed in
+  const isSignedIn = true;
+
+  if (isSignedIn) {
+    // redirect to home page
+    redirect(HomePageRoute({}));
+  }
+
+  return (
+    <div>
+      <h1>Signin Page</h1>
+    </div>
+  );
+};
+```
+
+As you can see, we are using the `HomePageRoute` to redirect the user to the home page if the user is already signed in. This way we can use the route builder in the functions to get the path of the route. Here instead of using the `Link` component, we are using the `HomePageRoute` function to get the path of the route. it takes the params as an argument. In this case, the `HomePageRoute` does not have any params so we are passing an empty object.

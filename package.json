@@ -1,0 +1,19 @@
+{
+  "name": "tempeh",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vocs dev",
+    "build": "vocs build",
+    "preview": "vocs preview"
+  },
+  "dependencies": {
+    "@types/react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tempeh": "^1.0.1",
+    "typescript": "latest",
+    "vocs": "latest",
+    "zod": "^3.23.6"
+  }
+}
