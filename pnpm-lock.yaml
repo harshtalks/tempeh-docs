@@ -15,8 +15,8 @@ dependencies:
     specifier: latest
     version: 18.3.1(react@18.3.1)
   tempeh:
-    specifier: ^1.0.1
-    version: 1.0.1(@babel/core@7.24.5)(react-dom@18.3.1)(typescript@5.4.5)
+    specifier: ^1.1.0
+    version: 1.1.0(next@14.2.3)(typescript@5.4.5)
   typescript:
     specifier: latest
     version: 5.4.5
@@ -4828,9 +4828,10 @@ packages:
       - ts-node
     dev: false
 
-  /tempeh@1.0.1(@babel/core@7.24.5)(react-dom@18.3.1)(typescript@5.4.5):
-    resolution: {integrity: sha512-VmLRGKPn1TVGFBmPDsJ2PteTeoPEs0xNvYnndjMbCCu0+c9atwwVyswjSqgeNFi7gUanK/m8tFNBSoUBOlg8ew==}
+  /tempeh@1.1.0(next@14.2.3)(typescript@5.4.5):
+    resolution: {integrity: sha512-dcKmiNhenemqacRw4Jwuf1fIG1J4YABKv86KLo2H6R51rQnItJI0GCwaHCYgP4UR/cLS1Hi6NwPz6lVDZTzflw==}
     peerDependencies:
+      next: '>=13.0.0'
       typescript: ^5.0.0
     dependencies:
       '@types/react': 18.3.1
@@ -4840,13 +4841,6 @@ packages:
       typescript: 5.4.5
       zod: 3.23.6
       zod-validation-error: 3.2.0(zod@3.23.6)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@opentelemetry/api'
-      - '@playwright/test'
-      - babel-plugin-macros
-      - react-dom
-      - sass
     dev: false
 
   /thenify-all@1.6.0:

@@ -1,0 +1,106 @@
+## Fetcher Wrapper functions
+
+In the previous section, we have seen how to create a route builder for our application. In this section, we will see how to create a fetcher wrapper function for our application.
+
+<strong>Tempeh</strong> also provides a way to create a fetcher wrapper function
+for our application. This fetcher wrapper function can be used to make API calls
+in our application.
+
+In this section we will use the same to create a fetcher wrapper function for publicly available [JSON Placeholder api ](https://jsonplaceholder.typicode.com/)
+
+### API EndPoint Details
+
+- Base URL: `https://jsonplaceholder.typicode.com`
+- Endpoints:
+  - `/todos/:id`:
+    - Method: `GET`
+    - Params: `id`
+    - Description: Get a todo by id
+    - Response:
+      ```json
+      {
+        "userId": 1,
+        "id": 1,
+        "title": "delectus aut autem",
+        "completed": false
+      }
+      ```
+
+Normally you would use fetch directly in your application to make API calls something like this:
+
+```tsx
+fetch("https://jsonplaceholder.typicode.com/todos/1")
+  .then((response) => response.json())
+  .then((json) => console.log(json));
+```
+
+But we are not going to do that as this does not really provide any type safety. and in production ready applications, we need to handle a lot of api calls and responses. So we will create a fetcher wrapper function that will handle all the api calls for one endpoint and we can create as many typesafe fetchers as we want
+
+### Fetcher Wrapper
+
+```tsx twoslash [app/fetcher.ts]
+import * as z from "zod";
+import { createEndPoint, createRoute } from "tempeh";
+
+// we will create our route config here
+
+const getTodos = createEndPoint(
+  {
+    httpMethod: "GET",
+    path: createRoute({
+      name: "getTodos",
+      paramsSchema: z.object({ id: z.number() }),
+      fn: ({ id }) => `/todos/${id}`,
+      options: {
+        internal: false,
+        baseUrl: "https://jsonplaceholder.typicode.com",
+      },
+    }),
+    SafeResponse: true,
+    response: z.array(
+      z.object({
+        id: z.number(),
+        title: z.string(),
+        completed: z.boolean(),
+      })
+    ),
+    requestConfig: {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  },
+  {
+    prettierValidationError: true,
+    overrideStatusCodeErrors: {
+      404: ({ code, defaultErrorMessage }) =>
+        `the api threw error with code ${code} and message ${defaultErrorMessage}`,
+    },
+  }
+);
+
+(async () => {
+  const todo = await getTodos({ params: { id: 1 } });
+  console.log(todo);
+})();
+```
+
+Things to notice here:
+
+1. As you can see we are reusing the createRoute function that we created in the previous section to create the route for the endpoint. We are reusing the same route config api here for the reasons as follows:
+   - `Params schema`
+   - `Path`
+   - `Base URL`
+   - and `Search Params`. All of this together, provide a strong base for api endpoint.
+2. The function takes the following arguments:
+   - `httpMethod`: The method of the api call, if the method is something that requires a body (i.e. POST), it will throw an error if body is not provided.
+   - `path`: The route config for the endpoint
+   - `SafeResponse`: If we want typesafe response or not, if true it will throw an error if the response does not match the schema. (zod validation error). in case you want to have flexibility in the response you can set it to false. but you will manually have to handle the response type using type casting.
+   - `response`: The zod schema for the response of the api call, only if `SafeResponse` is true.
+   - `body`: The zod schema for the body of the api call, only if the method requires a body. as of now, the following methods require a body: `POST`, `PUT`, `PATCH`.
+   - `requestConfig`: The request config for the api call. This will override the default request config for the endpoint. You can provide a function that will take the fetch options and return the fetch options. for exmaple, here we are overriding the headers for the api call.
+   - `options`: Additional options for the endpoint.
+     - `prettierValidationError`: If you want to prettify the zod validation error or not. (default: false) This will prettify the zod validation error and make it more readable.
+     - `overrideStatusCodeErrors`: If you want to override the default error messages for the status codes. This will override the default error messages for the status codes. You can provide a function that will take the status code and the default error message and return the new error message. for exmaple, here we are overriding the error message for 404 status code.
+     - `customFetchSignature`: If you want to provide a custom fetch signature for the endpoint. This will override the default fetch signature for the endpoint. You can provide a function that will take the fetch options and return the fetch response. Make sure, your custom fetch follows the signature same as of the default fetch signature.
+3. The function will return a function that will take the params and the fetch options and return the promised response of the api call.

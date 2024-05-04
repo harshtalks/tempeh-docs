@@ -1,0 +1,126 @@
+## Params and Search Params
+
+Another use case for <strong>Tempeh</strong> is to have typesafe parameters for your routes. This is useful when you want to pass parameters to your routes and you want to make sure that the parameters are of the correct type.
+
+<strong>Tempeh</strong> extends the Route configuration to provide type to the native
+`useSearchParams` and `useParams` hooks provided by next/router.
+
+Let's see this in action
+
+## Example
+
+Suppose you have a workspaces page in Next.js and it may take multiple parameters like `projectId`. You can define the types for these parameters in the route configuration.
+
+Similarly it may also take a query parameter like `sortBy`, `limit`, `query` etc to sort workspace activities or filter them.
+
+```md
+---
+SearchParams:
+  projectId: number
+  sortBy: string
+  limit: number
+  query: string
+
+Params:
+  projectId: string
+---
+```
+
+### File Structure
+
+```
+├── root
+|  |
+|  ├── app
+|  |  ├── layout.tsx
+|  |  ├── page.tsx
+|  |  |
+|  |  ├── workspaces
+|  |  |  ├── [projectId]
+|  |  |  |  ├── page.tsx
+|  |  |  |  ├── route.info.ts
+|  |
+|  |
+|  ├── package.json
+|  ├── next.config.mjs
+
+```
+
+As you can see we are just extending the route configuration to each page level here so that we have a single source of truth for all the parameters and query parameters attributed to a single route. this way managing the routes and parameters becomes easy.
+
+### workspaces/route.info.ts
+
+```tsx twoslash [app/workspaces/page.tsx]
+import * as z from "zod";
+import { createRoute } from "tempeh";
+
+// we will create our route config here
+
+const paramSchema = z.object({
+  projectId: z.string(),
+});
+
+const searchParamSchema = z.object({
+  sortBy: z.enum(["asc", "desc"]).optional().default("asc"),
+  limit: z.string().pipe(z.coerce.number()).optional(),
+  query: z.string().optional(),
+});
+
+const WorkspaceRoute = createRoute({
+  name: "WorkspaceRoute",
+  fn: ({ projectId }) => `/workspaces/${projectId}`,
+  paramsSchema: paramSchema,
+  searchParamsSchema: searchParamSchema,
+  options: {
+    internal: true,
+  },
+});
+
+export default WorkspaceRoute;
+```
+
+### Usage
+
+Now you can use the `WorkspaceRoute` in your components to link to the workspace page. From any page in the application you can link to the workspace page by passing the `projectId` and other search params. This way you will never have to worry about the type of the parameters and query parameters.
+
+Suppose inside a filter component you want to access to the workspace link with the query parameters `sortBy`, `limit` and `query`.
+
+`Note: It only works in the client components as it uses the next/router hooks internally.`
+
+```tsx [app/workspaces/[projectId]/components/filter.tsx]
+"use client";
+import WorkspaceRoute from "../../route.info";
+
+export const Filter = () => {
+  const { projectId } = WorkspaceRoute.useParams();
+  const { sortBy, limit, query } = WorkspaceRoute.useSearchParams();
+
+  return (
+    <div>
+      {/** using the values of search params here*/}
+      <Activities sort={sortBy} limit={limit} query={query} />
+    </div>
+  );
+};
+
+export default Filter;
+```
+
+Things to note:
+
+- The fact that we are using zod here, we can always define in our schema to transform the values to the desired type. In the above example we are coercing the `limit` to a number.
+- This is something that is done by <strong>nuqs</strong> aswell with better defined apis but the fact that <strong>Tempeh</strong> is built on top of <strong>nuqs</strong> makes it a good choice for Next.js applications.
+- This is only available in the client side components as it uses the next/router hooks internally.
+- The tempeh also provides a `params` and `searchParams` property from the built `routeConfig` but there are caviats to it:
+  - It is solely made to infer type so you can't access the values directly from it.
+
+This is how you can use the params and search params to infer types in your Next.js server components with <strong>Tempeh</strong>.
+
+```tsx
+type WorkspaceParams = typeof WorkspaceRoute.params;
+type WorkspaceSearchParams = typeof WorkspaceRoute.searchParams;
+
+// these are similar to
+type workspaceParams = output<typeof paramSchema>;
+type WorkspaceSearchParams = output<typeof searchParamSchema>;
+```

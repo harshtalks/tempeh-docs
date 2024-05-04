@@ -11,5 +11,13 @@ export default defineConfig({
       text: "Routes",
       link: "/route",
     },
+    {
+      text: "Params and Search Params",
+      link: "/params",
+    },
+    {
+      text: "Fetcher",
+      link: "/fetcher",
+    },
   ],
 });
