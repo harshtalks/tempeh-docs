@@ -40,7 +40,11 @@ But we are not going to do that as this does not really provide any type safety.
 
 ```tsx twoslash [app/fetcher.ts]
 import * as z from "zod";
-import { createEndPoint, createRoute } from "tempeh";
+import { createEndPoint, routeBuilder } from "tempeh";
+
+// Ideally this must be in the router.config.ts file but for example, we have shown it here
+
+const { createRoute } = routeBuilder.getInstance();
 
 // we will create our route config here
 
@@ -57,7 +61,7 @@ const getTodos = createEndPoint(
       },
     }),
     SafeResponse: true,
-    response: z.array(
+    responseSchema: z.array(
       z.object({
         id: z.number(),
         title: z.string(),

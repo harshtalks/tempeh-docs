@@ -52,7 +52,11 @@ As you can see we are just extending the route configuration to each page level 
 
 ```tsx twoslash [app/workspaces/page.tsx]
 import * as z from "zod";
-import { createRoute } from "tempeh";
+import { routeBuilder } from "tempeh";
+
+// Ideally this must be in the route.config.ts, but for the sake of example, we have shown it here
+
+const { createRoute } = routeBuilder.getInstance();
 
 // we will create our route config here
 

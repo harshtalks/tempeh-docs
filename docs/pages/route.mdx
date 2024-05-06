@@ -17,11 +17,35 @@ We are in a Next.js application repository with version >= 13 (Tempeh only works
 |  |
 |  |
 |  ├── package.json
+|  ├── route.config.ts
 |  ├── next.config.mjs
 
 ```
 
 You can see, we are in a typical Next.js application with a layout file and a page file. The content of the page.tsx file are as follows:
+
+### route.config.ts
+
+One thing you need to know about <strong>Tempeh</strong> is that it uses a small state under the hood to keep track of all the routes that user will create using `createRoute` API. The `routeBuilder` is a higher order function that takes the `route.info.ts` file path and returns the route builder object. This is a way to keep track of all the routes in a single file and use them in the application.
+We do it because of following reasons:
+
+1. We can have a single source of truth for all the routes in the application.
+2. it needs to parse the url to get all the params and search params of the route.
+3. it needs to validate the params and search params of the route.
+4. Having all the routes under same state will help in keeping track of all the routes and their params.
+
+```tsx twoslash [route.config.ts]
+import { routeBuilder } from "tempeh";
+
+// create a route builder for the entire application
+// this will keep track of all the routes in the application
+
+const { createRoute } = routeBuilder.getInstance();
+
+export default createRoute;
+```
+
+````tsx [route.config.ts]
 
 ### Page.tsx file
 
@@ -33,7 +57,7 @@ export const Page = () => {
     </div>
   );
 };
-```
+````
 
 and the content of the layout.tsx file are as follows:
 
@@ -98,7 +122,10 @@ Now we will create a file called `route.info.ts` inside the `app` folder and def
 
 ```tsx twoslash [app/route.info.ts] filename="route.info.ts"
 import * as z from "zod";
-import { createRoute } from "tempeh";
+import { routeBuilder } from "tempeh";
+
+// Ideally this must be in the route.config.ts file but for example, we have shown it here
+const createRoute = routeBuilder();
 
 const HomePageRoute = createRoute({
   name: "home-page",
@@ -137,13 +164,13 @@ import { Logo } from "./logo";
 import HomePageRoute from "../route.info";
 
 export const Header = () => {
-  return (
-    <header>
-      <HomePageRoute.Link params={{}}>
-        <Logo />
-      </HomePageRoute.Link>
-    </header>
-  );
+  return;
+
+  <header>
+    <HomePageRoute.Link params={{}}>
+      <Logo />
+    </HomePageRoute.Link>
+  </header>;
 };
 ```
 
@@ -174,6 +201,7 @@ Suppose you want to redirect a user from the signin page to the home page if the
 |  |
 |  |
 |  ├── package.json
+
 ```
 
 ### signin/page.tsx
