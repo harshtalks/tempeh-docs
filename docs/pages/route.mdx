@@ -33,6 +33,7 @@ We do it because of following reasons:
 2. it needs to parse the url to get all the params and search params of the route.
 3. it needs to validate the params and search params of the route.
 4. Having all the routes under same state will help in keeping track of all the routes and their params.
+5. It also stores all the base urls for the routes so that for each route, we don't have to provide the base url and we can choose the base url from the route builder instance without losing type safety.
 
 ```tsx twoslash [route.config.ts]
 import { routeBuilder } from "tempeh";
@@ -40,7 +41,14 @@ import { routeBuilder } from "tempeh";
 // create a route builder for the entire application
 // this will keep track of all the routes in the application
 
-const { createRoute } = routeBuilder.getInstance();
+const { createRoute } = routeBuilder.getInstance({
+  additionalBaseUrls: {
+    APP: "https://app.example.com", // will throw an error if the valid url is not provided
+    API: "https://api.example.com",
+  },
+  defaultBaseUrl: "/", // you can define a default base url. Default is "/"
+  formattedValidationErrors: true, // formatting of zod validation errors. Default is true
+});
 
 export default createRoute;
 ```
@@ -125,15 +133,20 @@ import * as z from "zod";
 import { routeBuilder } from "tempeh";
 
 // Ideally this must be in the route.config.ts file but for example, we have shown it here
-const createRoute = routeBuilder();
+const { createRoute } = routeBuilder.getInstance({
+  additionalBaseUrls: {
+    APP: "https://app.example.com",
+    API: "https://api.example.com",
+  },
+  defaultBaseUrl: "/",
+  formattedValidationErrors: true,
+});
 
 const HomePageRoute = createRoute({
   name: "home-page",
   fn: () => "/",
   paramsSchema: z.object({}),
-  options: {
-    internal: true,
-  },
+  baseUrl: "APP",
 });
 
 export default HomePageRoute;
@@ -148,7 +161,7 @@ Now let's break down the above code:
    - `name`: The name of the route (used internally to map unique routes)
    - `fn`: A function that returns the path of the route. (it will have access to all the params and search params of the route if any,)
    - `paramsSchema`: A zod schema for the route params.
-   - `options`: Additional options for the route.
+   - `baseUrl`: The base url of the route (optional) , it may take key of the existing defined base urls in the route builder instance or a new url but if invalid, it will throw an error
    - additionally it takes a `searchParamsSchema` for the search params of the route (optional)
 
 You can hover over the `createRoute` function to see the types of the arguments it takes.
@@ -164,13 +177,13 @@ import { Logo } from "./logo";
 import HomePageRoute from "../route.info";
 
 export const Header = () => {
-  return;
-
-  <header>
-    <HomePageRoute.Link params={{}}>
-      <Logo />
-    </HomePageRoute.Link>
-  </header>;
+  return (
+    <header>
+      <HomePageRoute.Link params={{}}>
+        <Logo />
+      </HomePageRoute.Link>
+    </header>
+  );
 };
 ```
 

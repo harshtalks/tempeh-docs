@@ -56,7 +56,14 @@ import { routeBuilder } from "tempeh";
 
 // Ideally this must be in the route.config.ts, but for the sake of example, we have shown it here
 
-const { createRoute } = routeBuilder.getInstance();
+const { createRoute } = routeBuilder.getInstance({
+  additionalBaseUrls: {
+    APP: "https://app.example.com",
+    API: "https://api.example.com",
+  },
+  defaultBaseUrl: "/",
+  formattedValidationErrors: true,
+});
 
 // we will create our route config here
 
@@ -75,9 +82,6 @@ const WorkspaceRoute = createRoute({
   fn: ({ projectId }) => `/workspaces/${projectId}`,
   paramsSchema: paramSchema,
   searchParamsSchema: searchParamSchema,
-  options: {
-    internal: true,
-  },
 });
 
 export default WorkspaceRoute;

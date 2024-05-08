@@ -44,7 +44,14 @@ import { createEndPoint, routeBuilder } from "tempeh";
 
 // Ideally this must be in the router.config.ts file but for example, we have shown it here
 
-const { createRoute } = routeBuilder.getInstance();
+const { createRoute } = routeBuilder.getInstance({
+  additionalBaseUrls: {
+    APP: "https://app.example.com",
+    API: "https://api.example.com",
+  },
+  defaultBaseUrl: "/",
+  formattedValidationErrors: true,
+});
 
 // we will create our route config here
 
@@ -55,10 +62,7 @@ const getTodos = createEndPoint(
       name: "getTodos",
       paramsSchema: z.object({ id: z.number() }),
       fn: ({ id }) => `/todos/${id}`,
-      options: {
-        internal: false,
-        baseUrl: "https://jsonplaceholder.typicode.com",
-      },
+      baseUrl: "https://jsonplaceholder.typicode.com", // we have used a different base url here which is not defined in the route builder
     }),
     SafeResponse: true,
     responseSchema: z.array(
