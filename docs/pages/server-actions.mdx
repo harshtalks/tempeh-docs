@@ -1,0 +1,166 @@
+## Server Actions
+
+Tempeh (From version 2.3.9) has a support for server actions. Server actions are the actions that are executed on the server side. This is useful when you want to perform some actions on the server side like sending an email, updating a database, etc. It is very useful in situations where you do not want to expose public api endpoints for these actions.
+
+Tempeh provides a way to define type safe server actions using zod. it also has a type schema support for FormData. Formdata is a built-in object in JavaScript that allows you to create key-value pairs that can be sent to the server using the fetch API.
+
+### Creating a server action
+
+To create a server action, you need to make sure of following things:
+
+- You are on Next.js version >= 13
+- New version of Tempeh is installed in your project
+
+### File Structure
+
+```
+├── root
+|  |
+|  ├── app
+|  |  ├── layout.tsx
+|  |  ├── page.tsx
+|  |  └── components
+|  |     ├── subscribe.tsx
+|  |     ├── action.ts
+|  |
+|  |
+|  ├── package.json
+|  ├── route.config.ts
+|  ├── next.config.mjs
+
+```
+
+Here we have a Next.js project with a layout file and a page file. We have a component called `subscribe.tsx` which has a form that takes an email and a name. We want to send this data to the server and perform some actions on the server side without exposing any public api endpoint.
+
+### Server Action
+
+```tsx twoslash [app/components/action.ts]
+"use server";
+import * as z from "zod";
+import { ServerActionError, createAction } from "tempeh";
+
+type Email = string;
+// think of it as a database
+const subscribes: Email[] = [];
+
+export const subscribeToNewsLetter = createAction({
+  inputSchema: z.object({
+    email: z.string().email(),
+  }),
+  accept: "json",
+  handler: ({ email }) => {
+    // check if the email is already subscribed.
+    const alreadySubscribed = subscribes.includes(email);
+
+    if (alreadySubscribed) {
+      throw new ServerActionError({
+        message: "Email already subscribed",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    // add email to subscribers list
+
+    subscribes.push(email);
+
+    return {
+      success: true,
+      message: "Subscribed successfully",
+    };
+  },
+});
+```
+
+We have created a server file ("use server" directive tells Next.js that this is a server only file) where we have defined a server action called `subscribeToNewsLetter`. This action takes an email as input and checks if the email is already subscribed. If the email is already subscribed, it throws an error with a message "Email already subscribed". If the email is not subscribed, it adds the email to the subscribers list and returns a success message.
+
+API Description:
+
+- `inputSchema`: This is the schema for the input data. In this case, we are expecting an email as input.
+- `accept`: This is the type of response we are expecting. In this case, we are expecting a JSON response. possible values: `json`, `formData`.
+- `handler`: This is the function that is executed when the action is called. It takes the input data as an argument and returns the response.
+
+When the email is already subscribed, the server action throws an error with a message "Email already subscribed" and a code "BAD_REQUEST" (400). This error is caught on the client side.
+
+### Server Action Usage
+
+```tsx [app/components/subscribe.tsx]
+import React from "react";
+import { subscribeToNewsLetter } from "./action";
+
+const code = () => {
+  const [email, setEmail] = React.useState("");
+
+  return (
+    <form>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button
+        type="submit"
+        onClick={async (e) => {
+          e.preventDefault();
+          try {
+            const { message } = await subscribeToNewsLetter({ email });
+            alert(message);
+          } catch (error) {
+            console.error(error);
+          }
+        }}
+      >
+        Subscribe
+      </button>
+    </form>
+  );
+};
+
+export default code;
+```
+
+We have imported the `subscribeToNewsLetter` action from the `action.ts` file. We have a form that takes an email as input and calls the `subscribeToNewsLetter` action when the form is submitted. Ideally this should be done by passing our action to the action prop of the form component.
+But just for the sake of simplicity, we have added the action directly to the button click event.
+
+When the form is submitted, the action is called with the email as input. If the email is already subscribed, the error is caught and an alert is shown with the error message. If the email is not subscribed, the success message is shown in an alert.
+
+### Server Action Usage - Safe Mode
+
+```tsx [app/components/subscribe.tsx]
+import React from "react";
+import { subscribeToNewsLetter } from "./action";
+
+const code = () => {
+  const [email, setEmail] = React.useState("");
+
+  return (
+    <form>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button
+        type="submit"
+        onClick={async (e) => {
+          e.preventDefault();
+
+          const { data, error } = await subscribeToNewsLetter.safe({ email });
+
+          if (error) {
+            console.error(error);
+            return;
+          }
+
+          console.log(data);
+        }}
+      >
+        Subscribe
+      </button>
+    </form>
+  );
+};
+
+export default code;
+```
+
+Sometimes, we care about the underlying value of an error object. In such cases, we can use the `safe` method of the action. The `safe` method returns an object with `data` and `error` properties. If the action is successful, the `data` property contains the response data. If the action throws an error, the `error` property contains the error object.

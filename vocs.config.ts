@@ -16,6 +16,10 @@ export default defineConfig({
       link: "/params",
     },
     {
+      text: "Server Actions",
+      link: "/server-actions",
+    },
+    {
       text: "Fetcher",
       link: "/fetcher",
     },
