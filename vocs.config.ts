@@ -8,6 +8,10 @@ export default defineConfig({
       link: "/",
     },
     {
+      text: "Router Config API",
+      link: "/router-config",
+    },
+    {
       text: "Routes",
       link: "/route",
     },
