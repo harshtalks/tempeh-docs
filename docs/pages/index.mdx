@@ -1,41 +1,20 @@
 ---
-layout: docs
+title: Tempeh – Next.js Routing on Steroids
+layout: landing
+showLogo: false
 ---
-
-## What is tempeh?
-
-<strong>Tempeh</strong> is a typesafe routing library for Next.js. It provides a way to define routes in a type-safe manner.
-With Tempeh and Zod, You can
-- Define declarative routes for all your pages in Next.js 14 and above.
-- Define Server Actions with Astro like type safe API.
+import { HomePage } from "vocs/components";
 
 
-## Installation
-
-To install tempeh, you can use npm or yarn.
-
-```bash [Terminal]
-npm install tempeh
-```
-
-```bash [Terminal]
-yarn add tempeh
-```
-
-```bash [Terminal]
-pnpm add tempeh
-```
-
-```bash [Terminal]
-bun add tempeh
-```
-
-## CLI
-
-You can also use tempeh-cli to fasten up the process.
-
-```bash [Terminal]
-npx tempeh-cli init
-```
-
-This will create all the boilerplate code for you to get started with Tempeh. It will also define declarative route objects for existing routes in your application.
+<HomePage.Root>
+  <HomePage.Logo />
+  <HomePage.Tagline>What if I told you, you can make your Next.js routes 100% more safe and fun? 🧀</HomePage.Tagline>
+  <HomePage.InstallPackage name="tempeh" type="install" />
+  <HomePage.Description>
+  Tempeh provides type safe declarative routing for Next.js with Zod validations. It also provides Astro inspired Server Actions Wrapper for Next.js.
+  </HomePage.Description>
+  <HomePage.Buttons>
+    <HomePage.Button href="/description" variant="accent">Get started</HomePage.Button>
+    <HomePage.Button href="https://github.com/harshtalks/tempeh">GitHub</HomePage.Button>
+  </HomePage.Buttons>
+</HomePage.Root>

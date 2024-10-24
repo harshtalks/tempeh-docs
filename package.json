@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@types/react": "latest",
+    "@vanilla-extract/css": "^1.16.0",
+    "clsx": "^2.1.1",
     "react": "latest",
     "react-dom": "latest",
     "tempeh": "5.0.0-next.4",
