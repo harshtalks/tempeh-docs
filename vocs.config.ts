@@ -20,12 +20,16 @@ export default defineConfig({
       link: "/params",
     },
     {
+      text: "CLI",
+      link: "/cli",
+    },
+    {
       text: "Server Actions",
       link: "/server-actions",
     },
     {
-      text: "Fetcher",
-      link: "/fetcher",
+      text: "Version 5 Update",
+      link: "/update",
     },
   ],
 });

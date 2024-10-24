@@ -1,0 +1,46 @@
+# Tempeh CLI
+
+I have made a CLI for Tempeh to fasten up the process of defining routes in your Next.js application.
+
+- All the boilerplate code will be created for you.
+- If there are existing routes in your application, it will define declarative route objects for them.
+- You can also programatically create routes as you keep adding new routes to your application.
+
+### Installation
+
+You can install the CLI using npm, yarn, pnpm or bun.
+
+#### Global Installation
+
+```bash [Terminal]
+npx install -g tempeh-cli
+```
+
+#### Local Installation
+
+```bash [Terminal]
+npx tempeh-cli init
+```
+
+### Usage
+
+Tempeh-cli provides you with a 2 commands to get started with Tempeh.
+- init
+- update
+
+#### init
+- This command will create all the boilerplate code for you to get started with Tempeh.
+- Installs zod and tempeh as dependencies in your project.
+- Defines declarative route objects for existing routes in your application.
+
+```bash [Terminal]
+npx tempeh-cli init
+```
+
+#### update
+- This command will generate route objects for new routes that you have added to your application.
+- It will not override the existing route objects.
+
+```bash [Terminal]
+npx tempeh-cli update
+```

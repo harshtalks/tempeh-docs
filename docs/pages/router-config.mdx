@@ -1,11 +1,11 @@
 ## Router Config API
 
-in Tempeh, working with routes is fairly easy and all the necessary apis can be retrieved through the `routerBuilder.instance` function that will be lazily called by user in a`router.config.ts` File.
+in Tempeh, working with routes is fairly easy and all the necessary apis can be retrieved through the `routerBuilder` factory function that will be used in a global config file often named as `route.config.ts`.
 
 ```tsx twoslash [route.config.ts]
 import { routeBuilder } from "tempeh";
 
-const { Navigate, createRoute, useTempehRouter } = routeBuilder.getInstance({
+const { Navigate, createRoute, useTempehRouter } = routeBuilder({
   // we can add additional base urls here.
   // For example, if we have a SSO setup and auth service is on a different domain.
   additionalBaseUrls: {
@@ -14,23 +14,21 @@ const { Navigate, createRoute, useTempehRouter } = routeBuilder.getInstance({
   },
   // since we primarily want to manage the Next.js routes.
   defaultBaseUrl: "/",
-  // Zod errors can be formatted to be more readable. default is true
-  formattedValidationErrors: true,
-});
+}).getInstance();
+
 
 export { Navigate, createRoute, useTempehRouter };
 ```
 
 We got three main functions from the `routerBuilder.getInstance` function:
 
-1. `Navigate`: This function is used to navigate to a different route. Think of it as a `Link` component in Next.js. where you can pass the pathname, searchParams, etc. and the base urls will be taken from one of the base urls provided in the `router.config.ts` file.
+1. `Navigate`: This function is used to navigate to a different route. Think of it as a `Link` component in Next.js. where you can pass the pathname, searchParams, etc. and the base urls will be taken from one of the base urls provided in the `router.config.ts` file. This can be useful to navigate to external pages.
 2. `createRoute`: This function is used to create a route. This gives us the utilities to create declarative routes in our Next.js application. read more at [routes page.](/route)
-3. `useTempehRouter`: This is a hook that can be used to get the current route information. This is patched with the Next.js router object and can be used to get the current route information. It gives better `push` and `refresh` functions than the default Next.js router object as it has an internal route builder engine.
+3. `useTempehRouter`: This is a hook that can be used to get the current route information. This is patched with the Next.js router object and can be used to get the current route information. It enhances the current Next.js router object with the defined base urls and better API. It only returns `push`, `replace` and `prefetch` as rest of the functions returned by `useRouter` are not route dependent.
 
 ### Navigate
 
 ```tsx [app/page.tsx]
-// [!include route.config.ts]
 import { Navigate } from "./route.config";
 // Home.tsx
 import * as React from "react";
@@ -42,7 +40,7 @@ export const Home = () => {
       <Navigate
         base="AUTH"
         path={"/sign-in"}
-        queryParams={{
+        searchParams={{
           redirectUrl: "https://example.com",
         }}
       >
@@ -64,18 +62,18 @@ import { createRoute } from "./route.config.ts";
 
 const {
   Link,
-  params,
-  searchParams,
+  navigate,
+  parseParams,
+  parseSearchParams,
   useParams,
   useRouter,
-  useSafeParams,
-  useSafeSearchParams,
   useSearchParams,
 } = createRoute({
   name: "/",
   fn: () => "/",
-  paramsSchema: object({}),
+  paramsSchema: z.object({}),
 });
+
 
 export const Home = () => {
   return (
@@ -89,13 +87,12 @@ export const Home = () => {
 As you can see, we are using the `createRoute` function to create a route. This gives us the utilities to create declarative routes in our Next.js application.
 
 - `Link`: This is a component that can be used to link any page to the `/` route (name of the route provided in the `createRoute` function).
-- `params`: This should only be used to get the type of the params object. i.e. `const params =  typeof params`. Using it as values will throw an error.
-- `searchParams`: This should only be used to get the type of the searchParams object. i.e. `const searchParams =  typeof searchParams`. Using it as values will throw an error.
-- `useParams`: This is a hook that can be used to get the params of the current route. if the params of the url are not valid as per the schema, it will throw an error.
-- `useSearchParams`: This is a hook that can be used to get the searchParams of the current route. if the searchParams of the url are not valid as per the schema, it will throw an error.
-- `useRouter`: This is a hook that can be used to get the Next.js router object.
-- `useSafeParams`: This is a hook that can be used to get the params of the current route. if the params of the url are not valid as per the schema, it will return a union of `error` or valid `route params`.
-- `useSafeSearchParams`: This is a hook that can be used to get the searchParams of the current route. if the searchParams of the url are not valid as per the schema, it will return a union of `error` or valid `route searchParams`.
+- `navigate`: Think of this as function that can be used to navigate to the `/` route. It takes the params and searchParams as arguments and returns a complete url.
+- `useParams`: This can be used to get the params of the current route. if the params of the url are not valid as per the schema, it will throw an error. Built on top of Next.js `useParams` hook, It will return the params of the current route with the schema validation. You will have end to end type safety powered by your own zod schema. It takes optional argument of `safe` which if enabled, hook instead of throwing error, it will return a union of `error` or valid `route params`.
+- `useSearchParams`: This can be used to get the searchParams of the current route. if the searchParams of the url are not valid as per the schema, it will throw an error. Built on top of Next.js `useSearchParams` hook, It will return the searchParams of the current route with the schema validation. You will have end to end type safety powered by your own zod schema. It takes optional argument of `safe` which if enabled, hook instead of throwing error, it will return a union of `error` or valid `route searchParams`.
+- `useRouter`: This hook can be used to get the current route information. This is patched with the Next.js router object and can be used to get the current route information. It enhances the current Next.js router object with the defined base urls and better API. It only returns `push`, `replace` and `prefetch` as rest of the functions returned by `useRouter` are not route dependent.
+- `parseParams`: This function can be used to parse the params of the route. It takes the params and the schema as arguments and returns the parsed params.
+- `parseSearchParams`: This function can be used to parse the searchParams of the route. It takes the searchParams and the schema as arguments and returns the parsed searchParams.
 
 #### Using the `useRouter` hook returned from the `createRoute` function
 
@@ -111,7 +108,7 @@ const workspaceRouteInfo = createRoute({
   }),
 });
 
-// using in another File: app/components/header.tsx
+// file name = "app/components/header.tsx"
 import { workspaceRouteInfo } from "../page";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

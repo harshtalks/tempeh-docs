@@ -41,19 +41,17 @@ import { routeBuilder } from "tempeh";
 // create a route builder for the entire application
 // this will keep track of all the routes in the application
 
-const { createRoute } = routeBuilder.getInstance({
+const { createRoute } = routeBuilder({
   additionalBaseUrls: {
     APP: "https://app.example.com", // will throw an error if the valid url is not provided
     API: "https://api.example.com",
   },
   defaultBaseUrl: "/", // you can define a default base url. Default is "/"
-  formattedValidationErrors: true, // formatting of zod validation errors. Default is true
-});
+}).getInstance();
 
 export default createRoute;
 ```
 
-````tsx [route.config.ts]
 
 ### Page.tsx file
 
@@ -65,7 +63,7 @@ export const Page = () => {
     </div>
   );
 };
-````
+```
 
 and the content of the layout.tsx file are as follows:
 
@@ -133,14 +131,13 @@ import * as z from "zod";
 import { routeBuilder } from "tempeh";
 
 // Ideally this must be in the route.config.ts file but for example, we have shown it here
-const { createRoute } = routeBuilder.getInstance({
+const { createRoute } = routeBuilder({
   additionalBaseUrls: {
     APP: "https://app.example.com",
     API: "https://api.example.com",
   },
   defaultBaseUrl: "/",
-  formattedValidationErrors: true,
-});
+}).getInstance()
 
 const HomePageRoute = createRoute({
   name: "home-page",
@@ -228,7 +225,7 @@ export const SigninPage = () => {
 
   if (isSignedIn) {
     // redirect to home page
-    redirect(HomePageRoute({}));
+    redirect(HomePageRoute.navigate({}));
   }
 
   return (

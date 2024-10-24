@@ -4,19 +4,11 @@ layout: docs
 
 ## What is tempeh?
 
-<strong>Tempeh</strong> is a Next.js library that allows you to create typesafe route
-builders to generate URLs for your route handlers and pages. Tempeh uses zod and
-advanced generics of typescript under the hood to provide you with rich flexible
-apis to build your routes.
+<strong>Tempeh</strong> is a typesafe routing library for Next.js. It provides a way to define routes in a type-safe manner.
+With Tempeh and Zod, You can
+- Define declarative routes for all your pages in Next.js 14 and above.
+- Define Server Actions with Astro like type safe API.
 
-<strong>Tempeh</strong> also creates a wrapper for useSearchParams and useParams
-to give you typesafe access to the query and route params for each and every page.
-
-Another feature of <strong>Tempeh</strong> is the ability to create a custom fetcher function with typesafety using zod. With the help of powerful apis of zod, we can create robust typesafe production ready application with ease.
-
-<strong>Tempeh</strong> is currently in the version ^1.0.1 and is in active development.
-If you have any suggestions or feedback, feel free to open an issue on the github
-repository.
 
 ## Installation
 
@@ -37,3 +29,13 @@ pnpm add tempeh
 ```bash [Terminal]
 bun add tempeh
 ```
+
+## CLI
+
+You can also use tempeh-cli to fasten up the process.
+
+```bash [Terminal]
+npx tempeh-cli init
+```
+
+This will create all the boilerplate code for you to get started with Tempeh. It will also define declarative route objects for existing routes in your application.

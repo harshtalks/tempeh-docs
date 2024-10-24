@@ -56,14 +56,13 @@ import { routeBuilder } from "tempeh";
 
 // Ideally this must be in the route.config.ts, but for the sake of example, we have shown it here
 
-const { createRoute } = routeBuilder.getInstance({
+const { createRoute } = routeBuilder({
   additionalBaseUrls: {
     APP: "https://app.example.com",
     API: "https://api.example.com",
   },
   defaultBaseUrl: "/",
-  formattedValidationErrors: true,
-});
+}).getInstance();
 
 // we will create our route config here
 
@@ -114,21 +113,47 @@ export const Filter = () => {
 export default Filter;
 ```
 
+#### Note: `useParams` and `useSearchParams` throw if the params and searchParams extracted by the hooks do not pass the validation check imposed by the schema.
+
+### Safe Usage
+
+Sometimes we do care about errors thrown by the `useParams` and `useSearchParams`. In such situations, `useParams` and `useSearchParams` take a boolean flag as option - `safe`. When turned on, the hooks return an object with two properties - `value` and `error`. The `value` property contains the extracted params and searchParams, and the `error` property contains the error thrown by the schema validation. Both of these values will be seperated out by the tag `success` making it easy to pass in pattern matching or conditional logic.
+
+##### `success -> true :: value will be returned`
+##### `success -> false :: error will be returned`
+
 Things to note:
 
 - The fact that we are using zod here, we can always define in our schema to transform the values to the desired type. In the above example we are coercing the `limit` to a number.
-- This is something that is done by <strong>nuqs</strong> aswell with better defined apis but the fact that <strong>Tempeh</strong> is built on top of <strong>nuqs</strong> makes it a good choice for Next.js applications.
 - This is only available in the client side components as it uses the next/router hooks internally.
 - The tempeh also provides a `params` and `searchParams` property from the built `routeConfig` but there are caviats to it:
   - It is solely made to infer type so you can't access the values directly from it.
 
 This is how you can use the params and search params to infer types in your Next.js server components with <strong>Tempeh</strong>.
 
-```tsx
-type WorkspaceParams = typeof WorkspaceRoute.params;
-type WorkspaceSearchParams = typeof WorkspaceRoute.searchParams;
 
-// these are similar to
-type workspaceParams = output<typeof paramSchema>;
-type WorkspaceSearchParams = output<typeof searchParamSchema>;
+### parseParams & parseSearchParams
+
+Apart from hooks, createRoute also exposes two functions `parseParams` and `parseSearchParams` which can be used to parse the params and searchParams from the URL. These functions are useful when you want to parse the params and searchParams in a function or a utility file.
+A great use case of this is to parse params returned by Next.js Page
+
+```tsx
+import WorkspaceRoute from "../../route.info";
+
+const WorkspacePage = ({ params }: { params: unknown }) => {
+  // Will throw error
+  const { workspaceId } = WorkspaceRoute.parseParams(params);
+  // Will not throw error
+  const safeParams = WorkspaceRoute.parseParams(params, { safe: true });
+
+  // use returned value pass in the props or render conditionally
+
+
+  return (
+    <div>
+      {/** using the values of search params here*/}
+      <Activities projectId = {projectId} />
+    </div>
+  );
+};
 ```

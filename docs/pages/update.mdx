@@ -1,0 +1,10 @@
+# Tempeh Version 5
+
+I have updated the Tempeh to version 5. This version has a lot of new features and improvements and also some breaking changes. I have updated the documentation to reflect the changes in the new version.
+
+1. No longer providing fetcher function in the route object. Instead, you can use better fetch wrappers like wretch, kv, or @effect/platform.
+2. Optimised `routeBuilder` as the previous singleton pattern was causing major performance issues.
+3. New closure based approach for `routeBuilder` to provide better type safety. You can multiple instances of routeBuilder however it is not recommended.
+4. Fewer APIs returned by `createRoute` to improve DX. useParams and useSafeParams are merged into a single `useParams` hook. Similarly, useSearchParams and useSafeSearchParams are merged into a single `useSearchParams` hook.
+5. We no longer keep track of all your routes in an internal object as it was causing performance issues. Instead, we only keep track of the base urls and the route configs.
+6. Test coverage has been improved.
